@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { ASSETS } from '../constants';
 
 interface LoaderProps {
   onComplete: () => void;
@@ -8,7 +9,7 @@ const Loader: React.FC<LoaderProps> = ({ onComplete }) => {
   const [stage, setStage] = useState<'drawing' | 'filling' | 'done'>('drawing');
 
   useEffect(() => {
-    // 1. Start Filling after drawing (simulated by CSS time)
+    // 1. Transition from initial fade-in to "filling" (full opacity/glow)
     const fillTimer = setTimeout(() => {
       setStage('filling');
     }, 1500);
@@ -41,43 +42,27 @@ const Loader: React.FC<LoaderProps> = ({ onComplete }) => {
 
       {/* Center Content (Logo) */}
       <div className={`absolute inset-0 flex items-center justify-center transition-opacity duration-500 z-10 ${stage === 'done' ? 'opacity-0' : 'opacity-100'}`}>
-        <div className="relative w-48 h-48 flex items-center justify-center">
-          {/* SVG Logo Mockup */}
-          <svg viewBox="0 0 100 100" className="w-32 h-32 overflow-visible">
-            <defs>
-              <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#bf953f" />
-                <stop offset="50%" stopColor="#fcf6ba" />
-                <stop offset="100%" stopColor="#b38728" />
-              </linearGradient>
-            </defs>
-            
-            {/* Animated Path */}
-            <path 
-              d="M50 5 L95 95 L5 95 Z" 
-              fill={stage === 'filling' || stage === 'done' ? "url(#goldGradient)" : "transparent"}
-              stroke="#B7795C" 
-              strokeWidth="1"
-              className="transition-all duration-[2000ms] ease-in-out"
-              style={{
-                strokeDasharray: 300,
-                strokeDashoffset: stage === 'drawing' ? 300 : 0,
-                opacity: stage === 'done' ? 0 : 1
-              }}
-            />
-            <text 
-              x="50" 
-              y="70" 
-              textAnchor="middle" 
-              fill={stage === 'filling' || stage === 'done' ? "url(#goldGradient)" : "transparent"}
-              stroke="#B7795C"
-              strokeWidth="0.5"
-              className="font-serif text-[20px] transition-all duration-[2000ms]"
-              style={{ opacity: stage === 'done' ? 0 : 1 }}
-            >
-              ANEEF
-            </text>
-          </svg>
+        <div className="relative w-64 h-64 flex items-center justify-center overflow-hidden">
+          {/* Logo Image */}
+          <img 
+            src={ASSETS.LOGO.MAIN} 
+            alt="ANEEF"
+            className={`
+              w-48 h-auto object-contain transition-all duration-[2000ms] ease-out
+              ${stage === 'drawing' ? 'opacity-0 scale-90 blur-sm' : ''}
+              ${stage === 'filling' ? 'opacity-100 scale-100 blur-0' : ''}
+              ${stage === 'done' ? 'opacity-0 scale-105' : ''}
+            `}
+          />
+          
+          {/* Shine Effect Overlay */}
+          <div 
+            className={`
+              absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12
+              transition-transform duration-[1500ms] ease-in-out
+              ${stage === 'filling' ? 'translate-x-full' : '-translate-x-full'}
+            `}
+          />
         </div>
       </div>
     </div>

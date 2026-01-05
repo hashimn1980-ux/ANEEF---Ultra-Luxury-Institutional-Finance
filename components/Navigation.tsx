@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Page } from '../types';
+import { ASSETS } from '../constants';
 
 interface NavigationProps {
   currentPage: Page;
@@ -32,10 +33,14 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         {/* Logo */}
         <div 
-          className="font-serif text-2xl font-bold tracking-widest cursor-pointer text-gold-foil"
+          className="cursor-pointer"
           onClick={() => onNavigate(Page.HOME)}
         >
-          ANEEF
+          <img 
+            src={ASSETS.LOGO.HEADER} 
+            alt="ANEEF" 
+            className="h-16 w-auto object-contain hover:opacity-80 transition-opacity"
+          />
         </div>
 
         {/* Desktop Menu */}

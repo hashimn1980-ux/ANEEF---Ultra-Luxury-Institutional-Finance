@@ -8,6 +8,7 @@ interface HomeProps {
 
 const Home: React.FC<HomeProps> = ({ onNavigate }) => {
   const [mousePos, setMousePos] = useState({ x: 50, y: 50 });
+  const [variation, setVariation] = useState<'A' | 'B' | 'C'>('A');
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,22 +28,77 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
     };
   }, []);
 
+  // Calculate classes based on selected variation
+  const getHeaderClass = () => {
+    let base = "font-serif text-6xl md:text-8xl lg:text-9xl tracking-tight mb-4 ";
+    if (variation === 'B') {
+      return base + "text-champagne-gold";
+    }
+    if (variation === 'C') {
+      return base + "text-gold-foil drop-shadow-[0_0_20px_rgba(0,0,0,0.6)]";
+    }
+    return base + "text-gold-foil";
+  };
+
+  const getIconClass = () => {
+    let base = "material-symbols-outlined text-6xl ";
+    if (variation === 'B') {
+      return base + "text-champagne-gold";
+    }
+    if (variation === 'C') {
+      return base + "text-gold-foil drop-shadow-[0_0_20px_rgba(0,0,0,0.6)]";
+    }
+    return base + "text-gold-foil";
+  };
+
+  const getTaglineClass = () => {
+     let base = "text-copper font-sans uppercase tracking-[0.4em] text-sm md:text-base ";
+     if (variation === 'C') {
+       return base + "drop-shadow-[0_0_15px_rgba(0,0,0,0.6)] font-bold";
+     }
+     return base;
+  };
+
   return (
     <div className="w-full">
+      {/* Design Review Controls (Temporary) */}
+      <div className="fixed bottom-4 right-4 z-[60] flex gap-2 p-2 bg-navy/80 backdrop-blur-sm border border-white/10 rounded-lg">
+        <button 
+          onClick={() => setVariation('A')}
+          className={`px-3 py-1 text-[10px] uppercase tracking-widest transition-colors ${variation === 'A' ? 'bg-white text-navy font-bold' : 'text-white hover:text-copper'}`}
+        >
+          Var A: Dark BG
+        </button>
+        <button 
+          onClick={() => setVariation('B')}
+          className={`px-3 py-1 text-[10px] uppercase tracking-widest transition-colors ${variation === 'B' ? 'bg-white text-navy font-bold' : 'text-white hover:text-copper'}`}
+        >
+          Var B: Champagne
+        </button>
+        <button 
+          onClick={() => setVariation('C')}
+          className={`px-3 py-1 text-[10px] uppercase tracking-widest transition-colors ${variation === 'C' ? 'bg-white text-navy font-bold' : 'text-white hover:text-copper'}`}
+        >
+          Var C: Shadow
+        </button>
+      </div>
+
       {/* Hero Section */}
       <section 
         ref={containerRef}
         className="relative h-screen w-full overflow-hidden bg-black flex items-center justify-center"
       >
-        {/* Molten Copper Background Simulation (Canvas/Video Placeholder) */}
+        {/* Molten Copper Background Simulation */}
         <div className="absolute inset-0 z-0 opacity-60">
            <img 
              src={ASSETS.HOME.HERO_BG}
              className="w-full h-full object-cover blur-sm scale-110 animate-pulse-slow" 
              alt="Molten Copper" 
            />
-           {/* Darken overlay */}
-           <div className="absolute inset-0 bg-navy/60 mix-blend-multiply"></div>
+           {/* Variation A: Darken overlay (Pure Black at 40% opacity) */}
+           {variation === 'A' && (
+             <div className="absolute inset-0 bg-black/40 transition-opacity duration-500"></div>
+           )}
         </div>
 
         {/* Torchlight Effect */}
@@ -56,18 +112,18 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* Center Content */}
         <div className="relative z-20 text-center">
           <div className="mb-6">
-             <span className="material-symbols-outlined text-6xl text-gold-foil">diamond</span>
+             <span className={getIconClass()}>diamond</span>
           </div>
-          <h1 className="font-serif text-6xl md:text-8xl lg:text-9xl text-gold-foil tracking-tight mb-4">
+          <h1 className={getHeaderClass()}>
             ANEEF
           </h1>
-          <p className="text-copper font-sans uppercase tracking-[0.4em] text-sm md:text-base">
+          <p className={getTaglineClass()}>
             Liquid Sovereignty
           </p>
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce z-20">
           <div className="w-[1px] h-16 bg-gradient-to-b from-transparent to-copper"></div>
         </div>
       </section>

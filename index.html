@@ -71,9 +71,18 @@
         border-radius: 3px;
       }
 
-      /* Gold Foil Text Utility */
+      /* Gold Foil Text Utility (Original) */
       .text-gold-foil {
         background: linear-gradient(110deg, #bf953f 10%, #fcf6ba 18%, #bf953f 22%, #b38728 35%, #fcf6ba 45%, #aa771c 55%);
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        animation: shine 4s linear infinite;
+      }
+
+      /* Champagne Gold Text Utility (Variation B) */
+      .text-champagne-gold {
+        background: linear-gradient(110deg, #F9F295 10%, #E0AA3E 45%, #F9F295 80%);
         background-size: 200% 100%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;

@@ -25,14 +25,14 @@ const Concierge: React.FC = () => {
         <div className="mt-16 md:mt-0">
           <div className="mb-8">
             <h4 className="text-copper text-xs uppercase tracking-widest mb-2">Secure Line</h4>
-            <p className="text-white font-serif">+44 20 7123 4567</p>
+            <p className="text-white font-serif">+971 58 935 3703</p>
           </div>
           <div>
             <h4 className="text-copper text-xs uppercase tracking-widest mb-2">Headquarters</h4>
             <p className="text-white/60 text-sm font-sans">
-              1 Canada Square<br/>
-              Canary Wharf, London<br/>
-              E14 5AB
+              EMMAR Square,<br/>
+              Dubai Downtown,<br/>
+              UAE
             </p>
           </div>
         </div>
