@@ -15,7 +15,7 @@ export const ASSETS = {
   },
   VAULT: {
     // Subtle background texture for the vault
-    TEXTURE: 'https://www.transparenttextures.com/patterns/stardust.png',
+    TEXTURE: '/assets/film-grain.svg',
     // Gallery Items
     ITEM_1: 'https://picsum.photos/seed/vault1/800/1000',
     ITEM_2: 'https://picsum.photos/seed/vault2/800/1000',
