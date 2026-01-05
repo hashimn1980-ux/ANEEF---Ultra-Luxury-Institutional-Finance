@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import { ASSETS } from '../constants';
 
 const Institution: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -82,7 +83,10 @@ const Institution: React.FC = () => {
         >
           {/* Step 1 */}
           <div className="flex-shrink-0 w-[40vw] md:w-[30vw] h-full flex flex-col justify-end group">
-            <div className="h-[70%] w-full bg-[url('https://picsum.photos/seed/step1/600/800')] bg-cover bg-center mb-6 opacity-60 group-hover:opacity-100 transition-opacity duration-500 skew-x-3 group-hover:skew-x-0 transform transition-transform"></div>
+            <div 
+              className="h-[70%] w-full bg-cover bg-center mb-6 opacity-60 group-hover:opacity-100 transition-opacity duration-500 skew-x-3 group-hover:skew-x-0 transform transition-transform"
+              style={{ backgroundImage: `url('${ASSETS.INSTITUTION.STEP_1}')`}}
+            ></div>
             <span className="text-gold-foil text-6xl font-serif mb-2">01</span>
             <h3 className="text-white text-xl font-bold uppercase tracking-widest mb-2">Extraction</h3>
             <p className="text-white/50 text-sm">We audit every existing visual asset for compliance and quality.</p>
@@ -90,7 +94,10 @@ const Institution: React.FC = () => {
 
           {/* Step 2 */}
           <div className="flex-shrink-0 w-[40vw] md:w-[30vw] h-full flex flex-col justify-end group">
-            <div className="h-[70%] w-full bg-[url('https://picsum.photos/seed/step2/600/800')] bg-cover bg-center mb-6 opacity-60 group-hover:opacity-100 transition-opacity duration-500 skew-x-3 group-hover:skew-x-0 transform transition-transform"></div>
+            <div 
+              className="h-[70%] w-full bg-cover bg-center mb-6 opacity-60 group-hover:opacity-100 transition-opacity duration-500 skew-x-3 group-hover:skew-x-0 transform transition-transform"
+              style={{ backgroundImage: `url('${ASSETS.INSTITUTION.STEP_2}')`}}
+            ></div>
             <span className="text-gold-foil text-6xl font-serif mb-2">02</span>
             <h3 className="text-white text-xl font-bold uppercase tracking-widest mb-2">Refinement</h3>
             <p className="text-white/50 text-sm">Elevating the aesthetic baseline to institutional standards.</p>
@@ -98,7 +105,10 @@ const Institution: React.FC = () => {
 
           {/* Step 3 */}
           <div className="flex-shrink-0 w-[40vw] md:w-[30vw] h-full flex flex-col justify-end group">
-            <div className="h-[70%] w-full bg-[url('https://picsum.photos/seed/step3/600/800')] bg-cover bg-center mb-6 opacity-60 group-hover:opacity-100 transition-opacity duration-500 skew-x-3 group-hover:skew-x-0 transform transition-transform"></div>
+            <div 
+              className="h-[70%] w-full bg-cover bg-center mb-6 opacity-60 group-hover:opacity-100 transition-opacity duration-500 skew-x-3 group-hover:skew-x-0 transform transition-transform"
+              style={{ backgroundImage: `url('${ASSETS.INSTITUTION.STEP_3}')`}}
+            ></div>
             <span className="text-gold-foil text-6xl font-serif mb-2">03</span>
             <h3 className="text-white text-xl font-bold uppercase tracking-widest mb-2">Preservation</h3>
             <p className="text-white/50 text-sm">Archiving assets in our secure Vault for future deployment.</p>

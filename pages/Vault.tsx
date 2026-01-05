@@ -1,17 +1,18 @@
 import React from 'react';
+import { ASSETS } from '../constants';
 
 const Vault: React.FC = () => {
   const artifacts = [
-    { id: '01', title: 'The Silent Architect', loc: 'Dubai', img: 'https://picsum.photos/seed/vault1/800/1000' },
-    { id: '02', title: 'Liquid Equity', loc: 'London', img: 'https://picsum.photos/seed/vault2/800/1000' },
-    { id: '03', title: 'Sovereign Frame', loc: 'New York', img: 'https://picsum.photos/seed/vault3/800/1000' },
-    { id: '04', title: 'Gilded Horizon', loc: 'Singapore', img: 'https://picsum.photos/seed/vault4/800/1000' },
+    { id: '01', title: 'The Silent Architect', loc: 'Dubai', img: ASSETS.VAULT.ITEM_1 },
+    { id: '02', title: 'Liquid Equity', loc: 'London', img: ASSETS.VAULT.ITEM_2 },
+    { id: '03', title: 'Sovereign Frame', loc: 'New York', img: ASSETS.VAULT.ITEM_3 },
+    { id: '04', title: 'Gilded Horizon', loc: 'Singapore', img: ASSETS.VAULT.ITEM_4 },
   ];
 
   return (
     <div className="bg-navy min-h-screen pt-20 overflow-hidden relative">
       {/* Background Texture */}
-      <div className="absolute inset-0 pointer-events-none opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+      <div className="absolute inset-0 pointer-events-none opacity-20" style={{ backgroundImage: `url('${ASSETS.VAULT.TEXTURE}')`}}></div>
 
       {/* Entrance Hero */}
       <section className="h-[60vh] flex flex-col justify-center px-12 md:px-24">

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Page } from '../types';
+import { ASSETS } from '../constants';
 
 interface HomeProps {
   onNavigate: (page: Page) => void;
@@ -36,7 +37,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* Molten Copper Background Simulation (Canvas/Video Placeholder) */}
         <div className="absolute inset-0 z-0 opacity-60">
            <img 
-             src="https://picsum.photos/seed/aneef-copper/1920/1080" 
+             src={ASSETS.HOME.HERO_BG}
              className="w-full h-full object-cover blur-sm scale-110 animate-pulse-slow" 
              alt="Molten Copper" 
            />
@@ -92,7 +93,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* Left: The Mandate */}
         <div className="w-full md:w-1/2 h-1/2 md:h-full relative group cursor-pointer border-b md:border-b-0 md:border-r border-white/10" onClick={() => onNavigate(Page.INSTITUTION)}>
           <div className="absolute inset-0 bg-navy transition-all duration-700 md:group-hover:w-[140%] z-0">
-             <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/arch/800/1200')] bg-cover bg-center mix-blend-overlay"></div>
+             <div className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-overlay" style={{ backgroundImage: `url('${ASSETS.HOME.MANDATE_BG}')`}}></div>
           </div>
           <div className="absolute inset-0 z-10 flex flex-col justify-center items-center md:items-start p-12 transition-transform duration-500 group-hover:scale-105">
             <h3 className="font-serif text-4xl md:text-5xl text-white mb-4">THE MANDATE</h3>
@@ -104,7 +105,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         {/* Right: Accelerate */}
         <div className="w-full md:w-1/2 h-1/2 md:h-full relative group cursor-pointer" onClick={() => onNavigate(Page.CONCIERGE)}>
           <div className="absolute inset-0 bg-navy-light transition-all duration-700 md:group-hover:w-[140%] md:group-hover:-translate-x-[20%] z-0">
-             <div className="absolute inset-0 opacity-20 bg-[url('https://picsum.photos/seed/jet/800/1200')] bg-cover bg-center mix-blend-overlay"></div>
+             <div className="absolute inset-0 opacity-20 bg-cover bg-center mix-blend-overlay" style={{ backgroundImage: `url('${ASSETS.HOME.ACCELERATE_BG}')`}}></div>
           </div>
           <div className="absolute inset-0 z-10 flex flex-col justify-center items-center md:items-end p-12 text-right transition-transform duration-500 group-hover:scale-105">
             <h3 className="font-serif text-4xl md:text-5xl text-white mb-4">ACCELERATE</h3>
