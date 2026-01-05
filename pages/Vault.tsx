@@ -23,30 +23,69 @@ const Vault: React.FC = () => {
   
   // Horizontal Scroll Refs
   const horizontalContainerRef = useRef<HTMLDivElement>(null);
+  const artifactsContainerRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
+  
+  // Physics State
+  const scrollPosRef = useRef(0);
+  const velocityRef = useRef(0);
+  const requestRef = useRef<number>(0);
 
-  // Horizontal Scroll Logic
+  // Horizontal Scroll Logic with Physics
   useEffect(() => {
     if (viewMode !== 'entrance') return;
 
     const container = horizontalContainerRef.current;
     if (!container) return;
 
-    let scrollPos = 0;
-    const scrollSpeed = 0.7; // Sensitivity
+    const scrollSpeed = 0.8; // Sensitivity
 
     const handleWheel = (e: WheelEvent) => {
-      // If we are in entrance mode, hijack vertical scroll for horizontal movement
       e.preventDefault();
       
       const maxScroll = container.scrollWidth - window.innerWidth;
-      scrollPos += e.deltaY * scrollSpeed;
-      scrollPos = Math.max(0, Math.min(scrollPos, maxScroll));
       
-      container.style.transform = `translateX(-${scrollPos}px)`;
+      // Update Scroll Position
+      scrollPosRef.current += e.deltaY * scrollSpeed;
+      scrollPosRef.current = Math.max(0, Math.min(scrollPosRef.current, maxScroll));
+      
+      // Calculate Velocity for Skew
+      velocityRef.current = e.deltaY * 0.1; 
+      // Clamp velocity for sanity
+      velocityRef.current = Math.max(-10, Math.min(velocityRef.current, 10));
+    };
+
+    const update = () => {
+      // Decay velocity
+      velocityRef.current *= 0.9;
+      if (Math.abs(velocityRef.current) < 0.01) velocityRef.current = 0;
+
+      // Apply transformations
+      if (horizontalContainerRef.current) {
+         horizontalContainerRef.current.style.transform = `translateX(-${scrollPosRef.current}px)`;
+      }
+
+      // Apply Skew to Artifacts Container for Drag Effect
+      if (artifactsContainerRef.current) {
+        artifactsContainerRef.current.style.transform = `skewX(${-velocityRef.current}deg)`;
+        artifactsContainerRef.current.style.transition = 'transform 0.1s ease-out';
+      }
+
+      // Parallax for Title (Moves slower than the rest)
+      if (titleRef.current) {
+        titleRef.current.style.transform = `translateX(${scrollPosRef.current * 0.5}px)`;
+      }
+
+      requestRef.current = requestAnimationFrame(update);
     };
 
     window.addEventListener('wheel', handleWheel, { passive: false });
-    return () => window.removeEventListener('wheel', handleWheel);
+    requestRef.current = requestAnimationFrame(update);
+
+    return () => {
+      window.removeEventListener('wheel', handleWheel);
+      cancelAnimationFrame(requestRef.current);
+    };
   }, [viewMode]);
 
   const openLightbox = (item: Artifact) => setLightboxImage(item);
@@ -79,62 +118,69 @@ const Vault: React.FC = () => {
       {viewMode === 'entrance' && (
         <div className="w-screen h-screen overflow-hidden relative bg-navy">
             {/* Scroll Container */}
-            <div ref={horizontalContainerRef} className="flex h-full w-fit transition-transform duration-100 ease-out will-change-transform">
+            <div ref={horizontalContainerRef} className="flex h-full w-fit will-change-transform">
                 
                 {/* 1. Entrance Title */}
-                <section className="flex-shrink-0 w-screen h-full flex flex-col items-center justify-center relative">
-                    <div className="absolute inset-0 bg-gradient-radial from-copper/5 to-transparent opacity-50"></div>
-                    <h1 className="text-8xl md:text-[10rem] lg:text-[12rem] font-serif font-bold leading-none text-gradient-gold drop-shadow-2xl z-10">
-                        THE VAULT
-                    </h1>
-                    <p className="text-white/70 text-sm md:text-base tracking-[0.6em] uppercase font-sans mt-4 z-10">
-                        Collection I: The Sovereign
-                    </p>
-                    <div className="mt-20 flex items-center justify-center gap-4 cursor-pointer group z-10" onClick={() => setViewMode('collection')}>
-                        <span className="text-copper text-xs tracking-[0.3em] uppercase group-hover:text-gold-light transition-colors">Explore Collections</span>
-                         <span className="material-symbols-outlined text-copper group-hover:translate-x-2 transition-transform duration-300">arrow_forward</span>
+                <section className="flex-shrink-0 w-screen h-full flex flex-col items-center justify-center relative z-10">
+                    <div ref={titleRef} className="text-center will-change-transform">
+                        <div className="absolute inset-0 bg-gradient-radial from-copper/5 to-transparent opacity-50 pointer-events-none"></div>
+                        <h1 className="text-8xl md:text-[10rem] lg:text-[12rem] font-serif font-bold leading-none text-gradient-gold drop-shadow-2xl">
+                            THE VAULT
+                        </h1>
+                        <p className="text-white/80 text-sm md:text-base tracking-[0.6em] uppercase font-sans mt-4">
+                            Collection I: The Sovereign
+                        </p>
+                        <div className="mt-20 flex items-center justify-center gap-4 cursor-pointer group pointer-events-auto" onClick={() => setViewMode('collection')}>
+                            <span className="text-copper text-xs tracking-[0.3em] uppercase group-hover:text-gold-light transition-colors">Explore Collections</span>
+                             <span className="material-symbols-outlined text-copper group-hover:translate-x-2 transition-transform duration-300">arrow_forward</span>
+                        </div>
                     </div>
-                     <div className="absolute bottom-10 right-10 flex items-center gap-2 opacity-50 animate-pulse">
+                     <div className="absolute bottom-10 right-10 flex items-center gap-2 opacity-50 animate-pulse pointer-events-none">
                         <span className="text-[10px] uppercase tracking-widest text-copper">Scroll</span>
                         <span className="material-symbols-outlined text-copper text-sm">arrow_forward</span>
                     </div>
                 </section>
 
                 {/* 2. Artifacts & Transitions */}
-                {sovereignCollection.slice(0, 3).map((item, idx) => (
-                    <React.Fragment key={item.id}>
-                        {/* Artifact View */}
-                        <section className="flex-shrink-0 w-screen h-full flex items-center justify-center relative">
-                            <div className="relative w-[70vh] h-[70vh] group cursor-pointer" onClick={() => setViewMode('collection')}>
-                                <img src={item.img} alt={item.title} className="w-full h-full object-cover shadow-2xl transition-transform duration-700 group-hover:scale-105" />
-                                {/* Copper Edge */}
-                                <div className="absolute inset-0 border border-copper/30 shadow-[0_0_10px_rgba(183,121,92,0.4)] pointer-events-none transition-all duration-500 group-hover:shadow-[0_0_30px_rgba(183,121,92,0.6)]"></div>
-                                {/* Caption */}
-                                <div className="absolute -bottom-16 left-0">
-                                    <p className="text-copper text-[10px] uppercase tracking-[0.2em] font-mono">
-                                        FIG 0{idx + 1}. / {item.title.toUpperCase()} / {item.era.toUpperCase()}
-                                    </p>
+                <div ref={artifactsContainerRef} className="flex h-full items-center will-change-transform">
+                    {sovereignCollection.slice(0, 3).map((item, idx) => (
+                        <React.Fragment key={item.id}>
+                            {/* Artifact View */}
+                            <section className="flex-shrink-0 w-screen h-full flex items-center justify-center relative">
+                                {/* Increased Size to 80vh */}
+                                <div className="relative w-[80vh] h-[80vh] group cursor-pointer" onClick={() => setViewMode('collection')}>
+                                    <img src={item.img} alt={item.title} className="w-full h-full object-cover shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105" />
+                                    {/* Copper Edge */}
+                                    <div className="absolute inset-0 border border-copper/30 shadow-[0_0_10px_rgba(183,121,92,0.4)] pointer-events-none transition-all duration-500 group-hover:shadow-[0_0_50px_rgba(183,121,92,0.6)]"></div>
+                                    {/* Caption - Softened Transition */}
+                                    <div className="absolute -bottom-16 left-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-500 ease-out">
+                                        <p className="text-copper text-[10px] uppercase tracking-[0.2em] font-mono">
+                                            FIG 0{idx + 1}. / {item.title.toUpperCase()} / {item.era.toUpperCase()}
+                                        </p>
+                                    </div>
+                                    {/* Hover Overlay */}
+                                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out pointer-events-none"></div>
                                 </div>
-                            </div>
-                        </section>
+                            </section>
 
-                        {/* Transition View (Negative Space) */}
-                         <section className="flex-shrink-0 w-[50vw] h-full flex items-center justify-center relative overflow-hidden">
-                            <span className="text-white/[0.03] text-[30vw] font-serif font-bold pointer-events-none select-none">
-                                0{idx + 1}
-                            </span>
-                        </section>
-                    </React.Fragment>
-                ))}
+                            {/* Transition View (Negative Space) */}
+                             <section className="flex-shrink-0 w-[50vw] h-full flex items-center justify-center relative overflow-hidden">
+                                <span className="text-white/[0.03] text-[30vw] font-serif font-bold pointer-events-none select-none">
+                                    0{idx + 1}
+                                </span>
+                            </section>
+                        </React.Fragment>
+                    ))}
 
-                 <section className="flex-shrink-0 w-screen h-full flex items-center justify-center">
-                    <button 
-                        onClick={() => setViewMode('collection')}
-                        className="px-12 py-6 border border-copper/50 text-copper text-xl font-serif italic hover:bg-copper/10 transition-colors"
-                    >
-                        View Full Collection
-                    </button>
-                </section>
+                     <section className="flex-shrink-0 w-screen h-full flex items-center justify-center">
+                        <button 
+                            onClick={() => setViewMode('collection')}
+                            className="px-12 py-6 border border-copper/50 text-copper text-xl font-serif italic hover:bg-copper/10 hover:tracking-widest transition-all duration-500"
+                        >
+                            View Full Collection
+                        </button>
+                    </section>
+                </div>
             </div>
         </div>
       )}
@@ -165,7 +211,7 @@ const Vault: React.FC = () => {
                 </h1>
                 <div className="flex flex-col items-center gap-8">
                     <div className="h-px w-24 bg-gradient-to-r from-transparent via-copper to-transparent"></div>
-                    <p className="text-lg md:text-xl text-gray-300 max-w-2xl font-light leading-relaxed font-sans">
+                    <p className="text-lg md:text-xl text-white/80 max-w-2xl font-light leading-relaxed font-sans">
                         A curated study in power, permanence, and the artifacts of a forgotten dynasty. 
                         Recovered from the sunken archives, each piece tells a story of a civilization at its zenith, 
                         accented by the signature ANEEF copper patina.
@@ -183,10 +229,10 @@ const Vault: React.FC = () => {
                             onClick={() => openLightbox(item)}
                         >
                             <div className={`relative overflow-hidden rounded-sm border border-copper/20 bg-navy-dark shadow-xl cursor-zoom-in transition-all duration-500 group-hover:border-gold-light/50 group-hover:shadow-[0_0_20px_-5px_rgba(236,146,19,0.2)] ${idx === 0 ? 'aspect-[3/4] lg:h-full' : 'aspect-square'}`}>
-                                <div className="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent opacity-60 z-10"></div>
-                                <img src={item.img} alt={item.title} className="w-full h-full object-cover transform transition-transform duration-700 group-hover:scale-105" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-navy via-transparent to-transparent opacity-60 z-10 transition-opacity duration-500 group-hover:opacity-40"></div>
+                                <img src={item.img} alt={item.title} className="w-full h-full object-cover transform transition-transform duration-700 ease-out group-hover:scale-105" />
                                 
-                                <div className="absolute bottom-0 left-0 w-full p-6 z-20 translate-y-4 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100 pointer-events-none">
+                                <div className="absolute bottom-0 left-0 w-full p-6 z-20 translate-y-4 opacity-0 transition-all duration-500 ease-out group-hover:translate-y-0 group-hover:opacity-100 pointer-events-none">
                                     <p className="text-gold-light text-xs font-bold uppercase tracking-widest mb-1">Lot {item.id}</p>
                                     <h3 className="text-white font-serif text-xl md:text-2xl">{item.title}</h3>
                                     <p className="text-copper text-xs mt-1">{item.era} • {item.material}</p>
@@ -205,10 +251,10 @@ const Vault: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-radial from-copper/10 to-navy-dark opacity-50 z-0"></div>
                     <div className="relative z-10 flex flex-col items-center gap-6">
                         <h2 className="font-serif text-3xl md:text-4xl text-white">Interested in this collection?</h2>
-                        <p className="text-copper-dim max-w-lg mx-auto text-sm md:text-base leading-relaxed font-sans">
+                        <p className="text-white/80 max-w-lg mx-auto text-sm md:text-base leading-relaxed font-sans">
                             To receive a private dossier, detailed provenance, or to schedule a viewing of The Sovereign collection, please submit a formal inquiry.
                         </p>
-                        <button className="px-10 py-4 bg-navy-dark border border-copper text-copper hover:text-white hover:bg-copper transition-all duration-500 uppercase tracking-[0.15em] text-xs font-bold rounded-sm">
+                        <button className="px-10 py-4 bg-transparent border border-copper text-copper hover:text-white hover:bg-copper/20 hover:tracking-[0.2em] transition-all duration-500 uppercase tracking-[0.15em] text-xs font-bold rounded-sm">
                             Request More Information
                         </button>
                     </div>

@@ -1,12 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 const Concierge: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mandate, setMandate] = useState('');
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const mandateOptions = [
+    { value: 'audit', label: 'Visual Audit' },
+    { value: 'retainer', label: 'Monthly Retainer' },
+    { value: 'advisory', label: 'Strategic Advisory' }
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitted(true);
   };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="bg-navy min-h-screen pt-20 flex flex-col md:flex-row">
@@ -17,7 +38,7 @@ const Concierge: React.FC = () => {
           <h1 className="font-serif text-5xl md:text-6xl text-white mb-8 leading-tight">
             Application for <br/><span className="text-copper italic">Visual Audit</span>
           </h1>
-          <p className="text-white/60 font-sans text-sm leading-relaxed max-w-sm">
+          <p className="text-white/80 font-sans text-sm leading-relaxed max-w-sm">
             Membership is by invitation or application only. Please complete the mandate to initiate your dossier review.
           </p>
         </div>
@@ -29,7 +50,7 @@ const Concierge: React.FC = () => {
           </div>
           <div>
             <h4 className="text-copper text-xs uppercase tracking-widest mb-2">Headquarters</h4>
-            <p className="text-white/60 text-sm font-sans">
+            <p className="text-white/80 text-sm font-sans">
               EMMAR Square,<br/>
               Dubai Downtown,<br/>
               UAE
@@ -78,21 +99,42 @@ const Concierge: React.FC = () => {
               />
             </div>
 
-            <div className="group">
-              <select className="w-full bg-transparent border-b border-white/20 py-4 text-white/60 focus:outline-none focus:border-copper transition-colors font-serif text-xl appearance-none rounded-none">
-                <option value="" disabled selected>Select Mandate Type</option>
-                <option value="audit" className="bg-navy">Visual Audit</option>
-                <option value="retainer" className="bg-navy">Monthly Retainer</option>
-                <option value="advisory" className="bg-navy">Strategic Advisory</option>
-              </select>
+            {/* Custom Dropdown */}
+            <div className="group relative" ref={dropdownRef}>
+                <div 
+                    className="w-full bg-transparent border-b border-white/20 py-4 text-white/60 cursor-pointer flex justify-between items-center"
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                >
+                    <span className={mandate ? 'text-white font-serif text-xl' : 'font-serif text-xl'}>
+                        {mandate ? mandateOptions.find(o => o.value === mandate)?.label : 'Select Mandate Type'}
+                    </span>
+                    <span className={`material-symbols-outlined transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`}>keyboard_arrow_down</span>
+                </div>
+                
+                <div className={`absolute top-full left-0 w-full bg-navy border border-copper z-50 transition-all duration-300 origin-top ${dropdownOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'}`}>
+                    <ul className="flex flex-col">
+                        {mandateOptions.map((opt) => (
+                            <li 
+                                key={opt.value}
+                                className="px-6 py-4 hover:bg-copper/20 text-white font-serif cursor-pointer transition-colors border-b border-white/5 last:border-0"
+                                onClick={() => {
+                                    setMandate(opt.value);
+                                    setDropdownOpen(false);
+                                }}
+                            >
+                                {opt.label}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             </div>
 
+            {/* Luxury Submit Button */}
             <button 
               type="submit" 
-              className="w-full py-6 border border-white/10 hover:border-copper group transition-all duration-300 relative overflow-hidden"
+              className="w-full py-6 border border-copper bg-transparent text-copper hover:bg-copper/10 hover:tracking-[0.4em] hover:text-white transition-all duration-500 ease-out uppercase text-xs font-bold tracking-[0.3em]"
             >
-              <span className="relative z-10 text-copper text-xs font-bold uppercase tracking-[0.3em] group-hover:text-white transition-colors">Submit Mandate</span>
-              <div className="absolute inset-0 bg-copper transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300"></div>
+              Submit Mandate
             </button>
 
           </form>
@@ -103,7 +145,7 @@ const Concierge: React.FC = () => {
               <div className="absolute inset-0 rounded-full animate-ping opacity-20 bg-copper"></div>
             </div>
             <h2 className="font-serif text-3xl text-white mb-4">Mandate Received.</h2>
-            <p className="text-white/60 font-sans max-w-sm mx-auto leading-relaxed">
+            <p className="text-white/80 font-sans max-w-sm mx-auto leading-relaxed">
               The Directorate will review your profile within 48 hours. Secure communication channels will be established upon approval.
             </p>
           </div>

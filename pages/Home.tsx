@@ -89,23 +89,23 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
         className="relative h-screen w-full overflow-hidden bg-black flex items-center justify-center"
       >
         {/* Molten Copper Background Simulation */}
-        <div className="absolute inset-0 z-0 opacity-60">
+        <div className="absolute inset-0 z-0 opacity-80">
            <img 
              src={ASSETS.HOME.HERO_BG}
              className="w-full h-full object-cover blur-sm scale-110 animate-pulse-slow" 
              alt="Molten Copper" 
            />
-           {/* Variation A: Darken overlay (Pure Black at 40% opacity) */}
+           {/* Variation A: Darken overlay - Lighter opacity for more texture visibility */}
            {variation === 'A' && (
-             <div className="absolute inset-0 bg-black/40 transition-opacity duration-500"></div>
+             <div className="absolute inset-0 bg-black/30 transition-opacity duration-500"></div>
            )}
         </div>
 
-        {/* Torchlight Effect */}
+        {/* Torchlight Effect - Increased Radius and Intensity */}
         <div 
           className="absolute inset-0 z-10 pointer-events-none mix-blend-soft-light transition-opacity duration-75"
           style={{
-            background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(183, 121, 92, 0.15) 0%, rgba(15, 40, 68, 0.8) 40%, rgba(15, 40, 68, 1) 100%)`
+            background: `radial-gradient(900px circle at ${mousePos.x}px ${mousePos.y}px, rgba(183, 121, 92, 0.25) 0%, rgba(15, 40, 68, 0.7) 40%, rgba(15, 40, 68, 1) 100%)`
           }}
         />
 
@@ -136,7 +136,7 @@ const Home: React.FC<HomeProps> = ({ onNavigate }) => {
             In a world of noise, we provide <span className="text-copper italic">silence</span>. 
             In an economy of volatility, we architect <span className="text-copper italic">permanence</span>.
           </h2>
-          <p className="font-sans text-white/60 text-lg leading-relaxed max-w-2xl mx-auto">
+          <p className="font-sans text-white/80 text-lg leading-relaxed max-w-2xl mx-auto">
             We operate at the intersection of extreme privacy and boundless capability. 
             For the Sovereign Individual, visibility is a liability. We manage your visual assets 
             with the same rigor applied to your financial portfolio.

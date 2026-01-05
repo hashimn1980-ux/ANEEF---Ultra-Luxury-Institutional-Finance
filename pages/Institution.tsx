@@ -1,12 +1,18 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { ASSETS } from '../constants';
 
+// --- GLOBAL CACHE (Singleton Pattern) ---
+// This ensures that once images are loaded, they persist across navigation
+const frameCount = 192;
+const imageCache: HTMLImageElement[] = [];
+let isGlobalLoaded = false;
+
 const Institution: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   // Cinematic Scroll Refs
   const heroWrapperRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null); // Replaced videoRef
+  const canvasRef = useRef<HTMLCanvasElement>(null); 
   
   // Text Refs
   const textHeroRef = useRef<HTMLDivElement>(null);
@@ -14,23 +20,22 @@ const Institution: React.FC = () => {
   const textPhilosophyRef = useRef<HTMLDivElement>(null);
   
   // Frame Management
-  const [imagesLoaded, setImagesLoaded] = useState(false);
-  const [loadProgress, setLoadProgress] = useState(0);
-  const frameCount = 192; // 0 to 191
-  const imagesRef = useRef<HTMLImageElement[]>([]); // Store preloaded images in memory
+  // Initialize state based on whether we've already loaded globally
+  const [imagesLoaded, setImagesLoaded] = useState(isGlobalLoaded);
+  const [loadProgress, setLoadProgress] = useState(isGlobalLoaded ? 100 : 0);
 
   // 1. URL Generation Helper
   const currentFrame = (index: number) => {
-    // Ensure we don't go out of bounds
     const safeIndex = Math.min(index, frameCount - 1);
     const paddedIndex = safeIndex.toString().padStart(3, '0');
     return `https://fhshakiacgnsnsvbrsdz.supabase.co/storage/v1/object/public/Ayman/webp-frames/frame_${paddedIndex}_delay-0.04s.jpg`;
   };
 
-  // 2. Preload Images
+  // 2. Preload Images (Only runs if not globally loaded)
   useEffect(() => {
+    if (isGlobalLoaded) return;
+
     let loadedCount = 0;
-    const imageArray: HTMLImageElement[] = [];
 
     for (let i = 0; i < frameCount; i++) {
       const img = new Image();
@@ -39,32 +44,33 @@ const Institution: React.FC = () => {
         loadedCount++;
         setLoadProgress(Math.round((loadedCount / frameCount) * 100));
         if (loadedCount === frameCount) {
+          isGlobalLoaded = true;
           setImagesLoaded(true);
         }
       };
       img.onerror = () => {
          console.warn(`Failed to load frame ${i}`);
          loadedCount++;
-         if (loadedCount === frameCount) setImagesLoaded(true);
+         if (loadedCount === frameCount) {
+             isGlobalLoaded = true;
+             setImagesLoaded(true);
+         }
       };
-      imageArray.push(img);
+      imageCache[i] = img;
     }
-    imagesRef.current = imageArray;
   }, []);
 
-  // 3. Canvas Rendering Logic (Simulates Object-Fit: Cover)
+  // 3. Canvas Rendering Logic
   const renderFrame = (index: number) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const img = imagesRef.current[index];
+    const img = imageCache[index];
 
     if (!ctx || !img || !img.complete) return;
 
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate "Object-Fit: Cover" dimensions
     const canvasRatio = canvas.width / canvas.height;
     const imgRatio = img.width / img.height;
     let drawWidth, drawHeight, offsetX, offsetY;
@@ -84,7 +90,7 @@ const Institution: React.FC = () => {
     ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
   };
 
-  // 4. Initial Canvas Setup & Resize Handler
+  // 4. Initial Canvas Setup
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -92,7 +98,6 @@ const Institution: React.FC = () => {
     const updateCanvasSize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      // Re-render current frame on resize (default to 0 if not scrolling)
       if (imagesLoaded) renderFrame(0);
     };
 
@@ -102,7 +107,7 @@ const Institution: React.FC = () => {
     return () => window.removeEventListener('resize', updateCanvasSize);
   }, [imagesLoaded]);
 
-  // 5. Horizontal Scroll Effect for Audit Section (Existing Logic)
+  // 5. Horizontal Scroll Effect
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -123,11 +128,9 @@ const Institution: React.FC = () => {
     return () => el.removeEventListener('wheel', handleWheel);
   }, []);
 
-  // 6. Cinematic Scroll Scrubbing Logic (Updated for Canvas)
+  // 6. Cinematic Scroll Scrubbing Logic
   useEffect(() => {
     const wrapper = heroWrapperRef.current;
-    
-    // Text Refs
     const heroText = textHeroRef.current;
     const genesisText = textGenesisRef.current;
     const philosophyText = textPhilosophyRef.current;
@@ -135,14 +138,12 @@ const Institution: React.FC = () => {
     if (!wrapper) return;
 
     const handleScrollScrub = () => {
-      // Don't scrub if images aren't loaded yet
       if (!imagesLoaded) return;
 
       const rect = wrapper.getBoundingClientRect();
-      const startScroll = rect.top; // Negative as we scroll down
+      const startScroll = rect.top; 
       const scrollDistance = wrapper.offsetHeight - window.innerHeight;
       
-      // Calculate Global Progress (0 to 1)
       let progress = 0;
       if (startScroll <= 0 && Math.abs(startScroll) < scrollDistance) {
         progress = Math.abs(startScroll) / scrollDistance;
@@ -152,52 +153,36 @@ const Institution: React.FC = () => {
         progress = 1;
       }
 
-      // --- CANVAS UPDATE ---
-      // Map progress (0-1) to Frame Index (0-191)
+      // Canvas Update
       const frameIndex = Math.min(
         frameCount - 1,
         Math.floor(progress * (frameCount - 1))
       );
-      
-      // Use requestAnimationFrame for smoother performance
       requestAnimationFrame(() => renderFrame(frameIndex));
 
-      // --- TEXT OPACITY LOGIC (Existing) ---
-      
-      // Stage 1: Hero Title (0.0 - 0.25)
+      // Text Opacity
       if (heroText) {
         let opacity = 1;
-        if (progress > 0.1) {
-            opacity = 1 - ((progress - 0.1) / 0.15); 
-        }
+        if (progress > 0.1) opacity = 1 - ((progress - 0.1) / 0.15); 
         heroText.style.opacity = Math.max(0, opacity).toString();
         heroText.style.transform = `translateY(${progress * 100}px)`;
         heroText.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
       }
 
-      // Stage 2: Genesis (0.3 - 0.6)
       if (genesisText) {
         let opacity = 0;
-        if (progress > 0.25 && progress < 0.4) {
-            opacity = (progress - 0.25) / 0.15;
-        } else if (progress >= 0.4 && progress <= 0.6) {
-            opacity = 1;
-        } else if (progress > 0.6) {
-            opacity = 1 - ((progress - 0.6) / 0.15);
-        }
+        if (progress > 0.25 && progress < 0.4) opacity = (progress - 0.25) / 0.15;
+        else if (progress >= 0.4 && progress <= 0.6) opacity = 1;
+        else if (progress > 0.6) opacity = 1 - ((progress - 0.6) / 0.15);
         genesisText.style.opacity = Math.max(0, opacity).toString();
         genesisText.style.transform = `translateY(${(progress - 0.3) * 50}px)`;
         genesisText.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
       }
 
-      // Stage 3: Philosophy (0.65 - 0.95)
       if (philosophyText) {
         let opacity = 0;
-        if (progress > 0.65 && progress < 0.8) {
-            opacity = (progress - 0.65) / 0.15;
-        } else if (progress >= 0.8) {
-            opacity = 1;
-        }
+        if (progress > 0.65 && progress < 0.8) opacity = (progress - 0.65) / 0.15;
+        else if (progress >= 0.8) opacity = 1;
         philosophyText.style.opacity = Math.max(0, opacity).toString();
         philosophyText.style.transform = `translateY(${(progress - 0.65) * 50}px)`;
         philosophyText.style.pointerEvents = opacity > 0 ? 'auto' : 'none';
@@ -205,23 +190,21 @@ const Institution: React.FC = () => {
     };
 
     window.addEventListener('scroll', handleScrollScrub);
-    // Trigger once to set initial state
     handleScrollScrub();
 
     return () => {
       window.removeEventListener('scroll', handleScrollScrub);
     };
-  }, [imagesLoaded]); // Only re-attach if load state changes
+  }, [imagesLoaded]);
 
   return (
     <div className="bg-navy min-h-screen">
       
-      {/* 1. CINEMATIC HERO HEADER (Scrubbing Section) */}
+      {/* 1. CINEMATIC HERO HEADER */}
       <section 
         ref={heroWrapperRef}
         className="relative h-[400vh] w-full"
       >
-        {/* Sticky Background Container */}
         <div className="sticky top-0 left-0 w-full h-screen overflow-hidden bg-black">
           
           {/* Loading Indicator */}
@@ -240,12 +223,9 @@ const Institution: React.FC = () => {
             className={`absolute inset-0 w-full h-full block transition-opacity duration-700 ${imagesLoaded ? 'opacity-50' : 'opacity-0'}`}
           />
           
-          {/* Gradients for readability */}
           <div className="absolute inset-0 bg-navy/60 mix-blend-multiply pointer-events-none"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-navy via-transparent to-navy opacity-80 pointer-events-none"></div>
 
-          {/* --- TEXT OVERLAYS --- */}
-          
           {/* Stage 1: Hero Title */}
           <div ref={textHeroRef} className="absolute inset-0 flex items-center justify-center z-10 p-12 transition-opacity duration-100 ease-out">
               <div className="text-center">
@@ -275,7 +255,7 @@ const Institution: React.FC = () => {
                   Born from the <br/>
                   <span className="italic text-white/50">Necessity of Silence.</span>
                 </h2>
-                <p className="text-white/70 font-sans text-lg leading-relaxed max-w-md bg-navy/80 backdrop-blur-sm p-6 border-l border-white/10 shadow-2xl">
+                <p className="text-white/80 font-sans text-lg leading-relaxed max-w-md bg-navy/80 backdrop-blur-sm p-6 border-l border-white/10 shadow-2xl">
                   "I watched as the industry grew loud. Competitors screamed for attention while true power whispered. ANEEF was architected not to compete in the noise, but to own the silence."
                 </p>
                 <div className="mt-8 flex items-center gap-4">
@@ -328,7 +308,7 @@ const Institution: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. NON-DISCLOSURE (Static Breaker) */}
+      {/* 2. NON-DISCLOSURE */}
       <section className="py-32 px-6 bg-navy relative z-40 border-t border-white/10">
         <div className="max-w-4xl mx-auto bg-navy-light border border-white/5 p-16 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 p-8 opacity-5">
@@ -338,7 +318,7 @@ const Institution: React.FC = () => {
           <div className="relative z-10 text-center">
             <span className="material-symbols-outlined text-5xl text-copper mb-6">verified_user</span>
             <h2 className="font-serif text-3xl md:text-4xl text-white mb-6">The Non-Disclosure Standard</h2>
-            <p className="font-sans text-white/60 leading-loose">
+            <p className="font-sans text-white/80 leading-loose">
               In an era of exposure, we offer the luxury of concealment. Your visual data is siloed, encrypted, 
               and legally bound by our ironclad NDA framework. We do not showcase your work; we protect it.
             </p>
@@ -346,7 +326,7 @@ const Institution: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. VISUAL AUDIT (Horizontal Scroll) */}
+      {/* 3. VISUAL AUDIT */}
       <section className="py-24 border-t border-white/5 bg-navy relative z-40">
         <div className="px-12 mb-12">
           <h2 className="font-serif text-4xl text-white mb-2">The Visual Audit</h2>
@@ -390,7 +370,6 @@ const Institution: React.FC = () => {
             <p className="text-white/50 text-sm max-w-sm">Archiving assets in our secure Vault for future deployment. Your legacy, secured for the next century.</p>
           </div>
           
-          {/* Spacer */}
           <div className="w-12 flex-shrink-0"></div>
         </div>
       </section>
