@@ -129,10 +129,10 @@ const Concierge: React.FC = () => {
                 </div>
             </div>
 
-            {/* Luxury Submit Button */}
+            {/* Luxury Ghost Submit Button */}
             <button 
               type="submit" 
-              className="w-full py-6 border border-copper bg-transparent text-copper hover:bg-copper/10 hover:tracking-[0.4em] hover:text-white transition-all duration-500 ease-out uppercase text-xs font-bold tracking-[0.3em]"
+              className="w-full py-6 border border-copper bg-transparent text-copper hover:bg-copper hover:text-white hover:tracking-[0.4em] transition-all duration-500 ease-out uppercase text-xs font-bold tracking-[0.3em]"
             >
               Submit Mandate
             </button>

@@ -2,10 +2,10 @@ import React, { useRef, useEffect, useState } from 'react';
 import { ASSETS } from '../constants';
 
 // --- GLOBAL CACHE (Singleton Pattern) ---
-// This ensures that once images are loaded, they persist across navigation
+// Variables persist outside component lifecycle
 const frameCount = 192;
 const imageCache: HTMLImageElement[] = [];
-let isGlobalLoaded = false;
+let isGlobalInitializationStarted = false;
 
 const Institution: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -19,10 +19,9 @@ const Institution: React.FC = () => {
   const textGenesisRef = useRef<HTMLDivElement>(null);
   const textPhilosophyRef = useRef<HTMLDivElement>(null);
   
-  // Frame Management
-  // Initialize state based on whether we've already loaded globally
-  const [imagesLoaded, setImagesLoaded] = useState(isGlobalLoaded);
-  const [loadProgress, setLoadProgress] = useState(isGlobalLoaded ? 100 : 0);
+  // State
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const [loadProgress, setLoadProgress] = useState(0);
 
   // 1. URL Generation Helper
   const currentFrame = (index: number) => {
@@ -31,33 +30,47 @@ const Institution: React.FC = () => {
     return `https://fhshakiacgnsnsvbrsdz.supabase.co/storage/v1/object/public/Ayman/webp-frames/frame_${paddedIndex}_delay-0.04s.jpg`;
   };
 
-  // 2. Preload Images (Only runs if not globally loaded)
+  // 2. Preload Logic (Robust Navigation Handling)
   useEffect(() => {
-    if (isGlobalLoaded) return;
-
-    let loadedCount = 0;
-
-    for (let i = 0; i < frameCount; i++) {
-      const img = new Image();
-      img.src = currentFrame(i);
-      img.onload = () => {
-        loadedCount++;
-        setLoadProgress(Math.round((loadedCount / frameCount) * 100));
-        if (loadedCount === frameCount) {
-          isGlobalLoaded = true;
-          setImagesLoaded(true);
-        }
-      };
-      img.onerror = () => {
-         console.warn(`Failed to load frame ${i}`);
-         loadedCount++;
-         if (loadedCount === frameCount) {
-             isGlobalLoaded = true;
-             setImagesLoaded(true);
-         }
-      };
-      imageCache[i] = img;
+    // A. Start loading if never started
+    if (!isGlobalInitializationStarted) {
+      isGlobalInitializationStarted = true;
+      for (let i = 0; i < frameCount; i++) {
+        const img = new Image();
+        img.src = currentFrame(i);
+        imageCache[i] = img;
+      }
     }
+
+    // B. Poll for progress
+    // This handles both the initial load AND navigation re-entry.
+    // If images are already cached/loaded, img.complete is true immediately.
+    const checkProgress = () => {
+      let loadedCount = 0;
+      let allComplete = true;
+
+      for (let i = 0; i < frameCount; i++) {
+        // If image object exists and is complete (loaded or error)
+        if (imageCache[i] && imageCache[i].complete) {
+          loadedCount++;
+        } else {
+          allComplete = false;
+        }
+      }
+
+      const progress = Math.round((loadedCount / frameCount) * 100);
+      setLoadProgress(progress);
+
+      if (allComplete && loadedCount === frameCount) {
+        setImagesLoaded(true);
+      } else {
+        // Keep checking until done
+        requestAnimationFrame(checkProgress);
+      }
+    };
+
+    // Start polling
+    requestAnimationFrame(checkProgress);
   }, []);
 
   // 3. Canvas Rendering Logic
@@ -107,7 +120,7 @@ const Institution: React.FC = () => {
     return () => window.removeEventListener('resize', updateCanvasSize);
   }, [imagesLoaded]);
 
-  // 5. Horizontal Scroll Effect
+  // 5. Horizontal Scroll Effect (Audit Section)
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
@@ -160,7 +173,7 @@ const Institution: React.FC = () => {
       );
       requestAnimationFrame(() => renderFrame(frameIndex));
 
-      // Text Opacity
+      // Text Opacity Logic
       if (heroText) {
         let opacity = 1;
         if (progress > 0.1) opacity = 1 - ((progress - 0.1) / 0.15); 
@@ -190,6 +203,7 @@ const Institution: React.FC = () => {
     };
 
     window.addEventListener('scroll', handleScrollScrub);
+    // Initial call to set state correctly
     handleScrollScrub();
 
     return () => {
@@ -207,7 +221,7 @@ const Institution: React.FC = () => {
       >
         <div className="sticky top-0 left-0 w-full h-screen overflow-hidden bg-black">
           
-          {/* Loading Indicator */}
+          {/* Loading Indicator - Only show if not fully loaded */}
           {!imagesLoaded && (
             <div className="absolute inset-0 flex items-center justify-center z-50 bg-navy text-copper">
               <div className="text-center">
@@ -220,7 +234,7 @@ const Institution: React.FC = () => {
           {/* Canvas Layer */}
           <canvas
             ref={canvasRef}
-            className={`absolute inset-0 w-full h-full block transition-opacity duration-700 ${imagesLoaded ? 'opacity-50' : 'opacity-0'}`}
+            className={`absolute inset-0 w-full h-full block transition-opacity duration-1000 ${imagesLoaded ? 'opacity-50' : 'opacity-0'}`}
           />
           
           <div className="absolute inset-0 bg-navy/60 mix-blend-multiply pointer-events-none"></div>
@@ -308,15 +322,26 @@ const Institution: React.FC = () => {
         </div>
       </section>
 
-      {/* 2. NON-DISCLOSURE */}
+      {/* 2. NON-DISCLOSURE (Updated with Thin SVG Icons) */}
       <section className="py-32 px-6 bg-navy relative z-40 border-t border-white/10">
         <div className="max-w-4xl mx-auto bg-navy-light border border-white/5 p-16 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 p-8 opacity-5">
-            <span className="material-symbols-outlined text-[12rem] text-copper">lock</span>
+             {/* Large Lock Background */}
+             <svg width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-copper">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+             </svg>
           </div>
           
           <div className="relative z-10 text-center">
-            <span className="material-symbols-outlined text-5xl text-copper mb-6">verified_user</span>
+             {/* Thin Verified Shield Icon */}
+            <div className="flex justify-center mb-6">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.5" className="text-copper">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    <path d="M9 12l2 2 4-4" />
+                </svg>
+            </div>
+            
             <h2 className="font-serif text-3xl md:text-4xl text-white mb-6">The Non-Disclosure Standard</h2>
             <p className="font-sans text-white/80 leading-loose">
               In an era of exposure, we offer the luxury of concealment. Your visual data is siloed, encrypted, 
