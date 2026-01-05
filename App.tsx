@@ -28,22 +28,20 @@ const App: React.FC = () => {
     <>
       {loading && <Loader onComplete={() => setLoading(false)} />}
       
-      {!loading && (
-        <div className="min-h-screen bg-navy flex flex-col">
-          <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
-          
-          <main 
-            className={`flex-grow transition-opacity duration-500 ease-in-out ${pageTransitioning ? 'opacity-0' : 'opacity-100'}`}
-          >
-            {currentPage === Page.HOME && <Home onNavigate={handleNavigate} />}
-            {currentPage === Page.INSTITUTION && <Institution />}
-            {currentPage === Page.VAULT && <Vault />}
-            {currentPage === Page.CONCIERGE && <Concierge />}
-          </main>
+      <div className="min-h-screen bg-navy flex flex-col">
+        <Navigation currentPage={currentPage} onNavigate={handleNavigate} />
+        
+        <main 
+          className={`flex-grow transition-opacity duration-500 ease-in-out ${pageTransitioning ? 'opacity-0' : 'opacity-100'}`}
+        >
+          {currentPage === Page.HOME && <Home onNavigate={handleNavigate} />}
+          {currentPage === Page.INSTITUTION && <Institution />}
+          {currentPage === Page.VAULT && <Vault />}
+          {currentPage === Page.CONCIERGE && <Concierge />}
+        </main>
 
-          <Footer onNavigate={handleNavigate} />
-        </div>
-      )}
+        <Footer onNavigate={handleNavigate} />
+      </div>
     </>
   );
 };
