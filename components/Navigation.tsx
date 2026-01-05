@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Page } from '../types';
-import { ASSETS } from '../constants';
 
 interface NavigationProps {
   currentPage: Page;
@@ -30,20 +29,9 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
       className={`fixed top-0 left-0 w-full z-50 transition-all duration-500 ease-in-out px-6 md:px-12 py-6 
         ${scrolled ? 'bg-navy border-b border-copper' : 'bg-transparent'}`}
     >
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        {/* Logo */}
-        <div 
-          className="cursor-pointer"
-          onClick={() => onNavigate(Page.HOME)}
-        >
-          <img 
-            src={ASSETS.LOGO.HEADER} 
-            alt="ANEEF" 
-            className="h-16 w-auto object-contain hover:opacity-80 transition-opacity"
-          />
-        </div>
-
-        {/* Desktop Menu */}
+      <div className="max-w-7xl mx-auto flex items-center justify-between md:justify-center relative">
+        
+        {/* Desktop Menu - Centered */}
         <div className="hidden md:flex gap-12">
           {navLinks.map((link) => (
             <button
@@ -58,8 +46,8 @@ const Navigation: React.FC<NavigationProps> = ({ currentPage, onNavigate }) => {
           ))}
         </div>
 
-        {/* Mobile Menu Icon (Placeholder) */}
-        <button className="md:hidden text-copper">
+        {/* Mobile Menu Icon (Absolute Right) */}
+        <button className="md:hidden text-copper absolute right-0 top-1/2 -translate-y-1/2">
           <span className="material-symbols-outlined">menu</span>
         </button>
       </div>

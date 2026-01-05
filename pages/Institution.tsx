@@ -1,16 +1,20 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { ASSETS } from '../constants';
 
 const Institution: React.FC = () => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Cinematic Scroll Refs
+  const cinematicWrapperRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
+  // Horizontal Scroll Effect for Audit Section
   useEffect(() => {
     const el = scrollContainerRef.current;
     if (!el) return;
 
     const handleWheel = (e: WheelEvent) => {
-      // If we are scrolling vertically, translate to horizontal scroll within this container
-      // Ideally, we check if the container is in view and if we haven't reached end
       if (el.scrollLeft < el.scrollWidth - el.clientWidth && e.deltaY > 0) {
          e.preventDefault();
          el.scrollLeft += e.deltaY;
@@ -23,6 +27,56 @@ const Institution: React.FC = () => {
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
   }, []);
+
+  // Cinematic Scroll Scrubbing Logic
+  useEffect(() => {
+    const wrapper = cinematicWrapperRef.current;
+    const video = videoRef.current;
+
+    if (!wrapper || !video) return;
+
+    const handleScrollScrub = () => {
+      if (!videoLoaded && video.readyState < 2) return; // Ensure metadata loaded
+
+      const rect = wrapper.getBoundingClientRect();
+      const startScroll = rect.top;
+      // Total scrollable distance is the wrapper height minus the viewport height
+      const scrollDistance = wrapper.offsetHeight - window.innerHeight;
+      
+      // Calculate progress (0 to 1)
+      let progress = 0;
+      
+      if (startScroll <= 0 && scrollDistance > 0) {
+        // We are scrubbing
+        progress = Math.abs(startScroll) / scrollDistance;
+      } else if (startScroll > 0) {
+        // Before section
+        progress = 0;
+      } else {
+        // After section
+        progress = 1;
+      }
+
+      // Clamp progress
+      progress = Math.min(Math.max(progress, 0), 1);
+
+      // Set video time
+      if (Number.isFinite(video.duration)) {
+        video.currentTime = video.duration * progress;
+      }
+    };
+
+    window.addEventListener('scroll', handleScrollScrub);
+    window.addEventListener('resize', handleScrollScrub);
+    
+    // Initial call
+    handleScrollScrub();
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollScrub);
+      window.removeEventListener('resize', handleScrollScrub);
+    };
+  }, [videoLoaded]);
 
   return (
     <div className="bg-navy min-h-screen pt-20">
@@ -119,10 +173,94 @@ const Institution: React.FC = () => {
         </div>
       </section>
 
-      {/* Founder's Note */}
-      <section className="py-24 px-6 text-center border-t border-white/5">
-        <p className="font-serif italic text-2xl text-copper mb-8">"We define the standard, so you can lead the market."</p>
-        <p className="font-sans text-xs uppercase tracking-[0.3em] text-white/40">Signed, The ANEEF Directorate</p>
+      {/* Cinematic Scroll Section (Genesis & Philosophy) */}
+      <section 
+        ref={cinematicWrapperRef}
+        className="relative h-[300vh] w-full"
+      >
+        {/* Sticky Background Container */}
+        <div className="sticky top-0 w-full h-screen overflow-hidden">
+          {/* Video Layer */}
+          <video
+            ref={videoRef}
+            src={ASSETS.INSTITUTION.CINEMATIC_VIDEO}
+            className="absolute inset-0 w-full h-full object-cover opacity-60"
+            muted
+            playsInline
+            preload="auto"
+            onLoadedMetadata={() => setVideoLoaded(true)}
+          />
+          {/* Dark Overlay for Text Readability */}
+          <div className="absolute inset-0 bg-navy/80 mix-blend-multiply"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-navy via-transparent to-navy opacity-90"></div>
+        </div>
+
+        {/* Floating Overlay Content */}
+        <div className="absolute inset-0 w-full z-20 pointer-events-none">
+          
+          {/* 1. The Founder's Genesis (Appears early) */}
+          <div className="h-screen w-full flex items-center justify-center p-6 md:p-12">
+            <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+              <div className="order-2 md:order-1 relative">
+                <div className="absolute -left-12 top-0 h-full w-[1px] bg-gradient-to-b from-transparent via-copper to-transparent"></div>
+                <h3 className="text-copper text-xs uppercase tracking-[0.3em] mb-4 font-bold">The Founder's Genesis</h3>
+                <h2 className="font-serif text-4xl md:text-6xl text-white mb-8 leading-tight">
+                  Born from the <br/>
+                  <span className="italic text-white/50">Necessity of Silence.</span>
+                </h2>
+                <p className="text-white/70 font-sans text-lg leading-relaxed max-w-md bg-navy/40 backdrop-blur-sm p-6 border-l border-white/10 pointer-events-auto">
+                  "I watched as the industry grew loud. Competitors screamed for attention while true power whispered. ANEEF was architected not to compete in the noise, but to own the silence."
+                </p>
+                <div className="mt-8 flex items-center gap-4">
+                  <div className="w-12 h-[1px] bg-copper"></div>
+                  <span className="text-white/40 text-xs uppercase tracking-widest">Elias Vane, Founder</span>
+                </div>
+              </div>
+              <div className="order-1 md:order-2 flex justify-center">
+                 <div className="relative w-64 md:w-80 aspect-[3/4] border border-white/10 p-2 bg-navy/20 backdrop-blur-sm">
+                    <img 
+                      src={ASSETS.INSTITUTION.FOUNDER_PORTRAIT} 
+                      alt="Founder" 
+                      className="w-full h-full object-cover grayscale opacity-80"
+                    />
+                    <div className="absolute bottom-6 -left-6 bg-navy border border-copper px-6 py-2">
+                       <span className="text-gold-foil font-serif text-xl italic">Est. 2024</span>
+                    </div>
+                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. The Architect's Philosophy (Appears later) */}
+          <div className="h-screen w-full flex items-center justify-center p-6 md:p-12">
+             <div className="max-w-4xl text-center">
+               <span className="material-symbols-outlined text-6xl text-copper mb-8 animate-pulse-slow">architecture</span>
+               <h2 className="font-serif text-5xl md:text-7xl text-white mb-12">
+                 The Architect's <span className="text-gold-foil italic">Philosophy</span>
+               </h2>
+               <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left pointer-events-auto">
+                  <div className="bg-navy/80 border border-white/5 p-8 backdrop-blur-md">
+                    <span className="text-copper font-serif text-3xl block mb-4">I.</span>
+                    <h4 className="text-white text-sm uppercase tracking-widest mb-2 font-bold">Sovereignty</h4>
+                    <p className="text-white/50 text-sm leading-relaxed">Control is not negotiated; it is assumed. We return full asset ownership to the creator.</p>
+                  </div>
+                  <div className="bg-navy/80 border border-white/5 p-8 backdrop-blur-md transform md:-translate-y-8">
+                    <span className="text-copper font-serif text-3xl block mb-4">II.</span>
+                    <h4 className="text-white text-sm uppercase tracking-widest mb-2 font-bold">Permanence</h4>
+                    <p className="text-white/50 text-sm leading-relaxed">Trends fade. Legacy endures. We build visual systems designed to outlast the market cycle.</p>
+                  </div>
+                  <div className="bg-navy/80 border border-white/5 p-8 backdrop-blur-md">
+                    <span className="text-copper font-serif text-3xl block mb-4">III.</span>
+                    <h4 className="text-white text-sm uppercase tracking-widest mb-2 font-bold">Eclipse</h4>
+                    <p className="text-white/50 text-sm leading-relaxed">The brightest stars are often obscured. We manage your visibility to ensure maximum impact.</p>
+                  </div>
+               </div>
+             </div>
+          </div>
+
+          {/* Spacer for smooth exit */}
+          <div className="h-[50vh]"></div>
+        </div>
       </section>
     </div>
   );
